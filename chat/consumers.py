@@ -21,19 +21,18 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'message': 'Welcome to our website!'
         }))
-        active_user.append(self)
-        if len(active_user) > 1:
-            active_user[0].send(text_data=json.dumps({
+        # Send message to every users already in the platform to notify them about the new user
+        _=[i.send(text_data=json.dumps({
             'message': f'{self.channel_name} has just joined out wesite!'
-        }))
-
+        })) for i in active_user ]
+        # Append the new users to the list
+        active_user.append(self)
 
     def disconnect(self, close_code):
         # Leave room group
         async_to_sync(self.channel_layer.group_discard)(
             self.room_group_name, self.channel_name
         )
-        print( self.room_group_name, self.channel_name, "At disconnet")
 
     # Receive message from WebSocket
     def receive(self, text_data):
@@ -53,3 +52,9 @@ class ChatConsumer(WebsocketConsumer):
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({"message": message}))
+
+    def handle_private_chat_message(self, message_content):
+        # Your logic for handling chat messages
+        self.send(text_data=json.dumps({
+            'message': 'Welcome to our website!'
+        }))
